@@ -8,7 +8,7 @@
 	Martin Karer / Sezz, 2014
 	http://www.sezz.at
 
-adf--]]
+--]]
 
 local MAJOR, MINOR = "Sezz:Auras-0.1", 1;
 local APkg = Apollo.GetPackage(MAJOR);
