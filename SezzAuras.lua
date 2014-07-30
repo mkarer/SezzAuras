@@ -8,6 +8,8 @@
 	Martin Karer / Sezz, 2014
 	http://www.sezz.at
 
+	TEST
+
 --]]
 
 local MAJOR, MINOR = "Sezz:Auras-0.1", 1;
