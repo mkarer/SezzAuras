@@ -14,46 +14,19 @@ local MAJOR, MINOR = "Sezz:Auras-0.1", 1;
 local APkg = Apollo.GetPackage(MAJOR);
 if (APkg and (APkg.nVersion or 0) >= MINOR) then return; end
 
-local NAME = string.match(MAJOR, ":(%a+)\-");
 local Auras = APkg and APkg.tPackage or {};
 local log;
 
 -- Lua API
 local tinsert = table.insert;
 
------------------------------------------------------------------------------
-
---[[
-local tXml = {
-	__XmlNode = "Forms",
-	{
-		__XmlNode="Form", Class="BuffContainerWindow",
-		LAnchorPoint="0", LAnchorOffset="0",
-		TAnchorPoint="0", TAnchorOffset="0",
-		RAnchorPoint="0", RAnchorOffset="300",
-		BAnchorPoint="0", BAnchorOffset="30",
-		RelativeToClient="1", Template="Default",
-		Font="Default", Text="", TooltipType="OnCursor",
-		BGColor="00000000", TextColor="UI_WindowTextDefault",
-		Border="1", Picture="1", SwallowMouseClicks="1", Moveable="1", Escapable="0", IgnoreMouse="1",
-		Overlapped="1", TooltipColor="", Sprite="BasicSprites:WhiteFill", Tooltip="",
-		BeneficialBuffs="1", HarmfulBuffs="1", Name="SezzAurasContainer",
-	},
-};
---]]
+-- WildStar API
+local Apollo, XmlDoc = Apollo, XmlDoc;
 
 -----------------------------------------------------------------------------
 
 function Auras:Enable()
 	if (self.bEnabled) then return; end
---[[
-	-- Create Buff Window
-	if (not self.wndBuffContainer) then
-		self.wndBuffContainer = Apollo.LoadForm(XmlDoc.CreateFromTable(tXml), "SezzAurasContainer", nil, self);
-		self.wndBuffContainer:SetUnit(self.unit);
-		self.wndBuffContainer:AddEventHandler("GenerateTooltip", "OnGenerateBuffTooltip", self);
-	end
---]]
 
 	-- Update
 	if (self.unit and self.unit:IsValid()) then
@@ -139,13 +112,16 @@ function Auras:ScanAuras(arAuras, tCache, bIsDebuff)
 	end
 
 	-- Add/Update Auras
-	for _, tAura in ipairs(arAuras) do
+	for i, tAura in ipairs(arAuras) do
 		tAura.bIsDebuff = bIsDebuff;
+		tAura.nIndex = i;
 
 		if (not tCache[tAura.idBuff]) then
 			-- New Aura
 --			log:debug("Added Aura: %s", tAura.splEffect:GetName());
 			tCache[tAura.idBuff] = tAura;
+			tAura.unit = self.unit;
+
 			self:Call("OnAuraAdded", tAura);
 		else
 			-- Update Existing Aura
@@ -154,6 +130,11 @@ function Auras:ScanAuras(arAuras, tCache, bIsDebuff)
 
 			if (tCache[tAura.idBuff].nCount ~= tAura.nCount) then
 				tCache[tAura.idBuff].nCount = tAura.nCount;
+				bAuraUpdated = true;
+			end
+
+			if (tCache[tAura.idBuff].nIndex ~= tAura.nIndex) then
+				tCache[tAura.idBuff].nIndex = tAura.nIndex;
 				bAuraUpdated = true;
 			end
 
@@ -183,7 +164,6 @@ function Auras:Update()
 
 	if (self.unit and self.unit:IsValid()) then
 		local tAuras = self.unit:GetBuffs();
-
 		self:ScanAuras(tAuras.arBeneficial, self.tBuffs, false);
 		self:ScanAuras(tAuras.arHarmful, self.tDebuffs, true);
 	else
@@ -202,7 +182,7 @@ end
 -----------------------------------------------------------------------------
 
 function Auras:New()
-	self = setmetatable({}, { __index = Auras });
+	local self = setmetatable({}, { __index = Auras });
 
 	self.bEnabled = false;
 	self.tBuffs = {};
