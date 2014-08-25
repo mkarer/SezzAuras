@@ -114,33 +114,29 @@ function Auras:ScanAuras(arAuras, tCache, bIsDebuff)
 	-- Add/Update Auras
 	for i, tAura in ipairs(arAuras) do
 		tAura.bIsDebuff = bIsDebuff;
-		tAura.nIndex = i;
 
 		if (not tCache[tAura.idBuff]) then
 			-- New Aura
 --			log:debug("Added Aura: %s", tAura.splEffect:GetName());
 			tCache[tAura.idBuff] = tAura;
 			tAura.unit = self.unit;
+			tAura.nIndex = i;
 
 			self:Call("OnAuraAdded", tAura);
 		else
 			-- Update Existing Aura
 			local bAuraUpdated = (tAura.fTimeRemaining > tCache[tAura.idBuff].fTimeRemaining);
 			tCache[tAura.idBuff].fTimeRemaining = tAura.fTimeRemaining; -- fTimeRemaining doesn't get updated when a buff is refreshed!
+			tCache[tAura.idBuff].nIndex = i;
 
 			if (tCache[tAura.idBuff].nCount ~= tAura.nCount) then
 				tCache[tAura.idBuff].nCount = tAura.nCount;
 				bAuraUpdated = true;
 			end
 
-			if (tCache[tAura.idBuff].nIndex ~= tAura.nIndex) then
-				tCache[tAura.idBuff].nIndex = tAura.nIndex;
-				bAuraUpdated = true;
-			end
-
 			if (bAuraUpdated) then
 --				log:debug("Updated Aura: %s", tAura.splEffect:GetName());
-				self:Call("OnAuraUpdated", tAura);
+				self:Call("OnAuraUpdated", tCache[tAura.idBuff]);
 			end
 		end
 
